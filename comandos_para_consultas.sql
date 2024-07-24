@@ -108,15 +108,36 @@ FROM
 ORDER BY 
     TotalPosts DESC, Users.DisplayName; */
 
-SELECT TOP (200) 
-    Users.DisplayName,
-    (SELECT COUNT(*) FROM Posts WHERE OwnerUserId = Users.Id) AS TotalPosts,
-    (SELECT COUNT(*) FROM Comments WHERE UserId = Users.Id) AS TotalComments,
-    (SELECT COUNT(*) FROM Badges WHERE UserId = Users.Id) AS TotalBadges
-FROM 
-    Users 
-ORDER BY 
-    TotalPosts DESC, Users.DisplayName;
+-- SELECT TOP (200) 
+--     Users.DisplayName,
+--     (SELECT COUNT(*) FROM Posts WHERE OwnerUserId = Users.Id) AS TotalPosts,
+--     (SELECT COUNT(*) FROM Comments WHERE UserId = Users.Id) AS TotalComments,
+--     (SELECT COUNT(*) FROM Badges WHERE UserId = Users.Id) AS TotalBadges
+-- FROM 
+--     Users 
+-- ORDER BY 
+--     TotalPosts DESC, Users.DisplayName;
+
+SELECT TOP (20) Users.DisplayName,
+       COALESCE(PostCounts.TotalPosts, 0) AS TotalPosts,
+       COALESCE(CommentCounts.TotalComments, 0) AS TotalComments,
+       COALESCE(BadgeCounts.TotalBadges, 0) AS TotalBadges
+FROM Users
+LEFT JOIN (
+    SELECT OwnerUserId, COUNT(*) AS TotalPosts
+    FROM Posts
+    GROUP BY OwnerUserId
+) AS PostCounts ON Users.Id = PostCounts.OwnerUserId
+LEFT JOIN (
+    SELECT UserId, COUNT(*) AS TotalComments
+    FROM Comments
+    GROUP BY UserId
+) AS CommentCounts ON Users.Id = CommentCounts.UserId
+LEFT JOIN (
+    SELECT UserId, COUNT(*) AS TotalBadges
+    FROM Badges
+    GROUP BY UserId
+) AS BadgeCounts ON Users.Id = BadgeCounts.UserId;
 
 
 -- OCTAVO Ejercicio
